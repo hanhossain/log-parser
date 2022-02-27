@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace LogParser.Tests;
@@ -67,5 +68,27 @@ public class ParserTests
 
         var parser = new Parser(schema);
         Assert.False(parser.TryParse(input, out _));
+    }
+
+    [Fact]
+    public void Parse_MissingColumns()
+    {
+        var schema = new Schema()
+        {
+            Regex = "(?<hello>.+)",
+            Columns = new List<Column>()
+            {
+                new Column()
+                {
+                    Name = "hello"
+                },
+                new Column()
+                {
+                    Name = "world"
+                }
+            }
+        };
+
+        Assert.Throws<ArgumentException>(() => new Parser(schema));
     }
 }

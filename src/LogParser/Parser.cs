@@ -13,6 +13,17 @@ public class Parser
     {
         Schema = schema ?? throw new ArgumentNullException(nameof(schema));
         _regex = new Regex(Schema.Regex);
+
+        var groups = _regex.GetGroupNames().ToHashSet();
+        var missingColumns = Schema.Columns
+            .Select(x => x.Name)
+            .Where(x => !groups.Contains(x))
+            .ToList();
+        if (missingColumns.Any())
+        {
+            var columns = string.Join(", ", missingColumns);
+            throw new ArgumentException($"The following columns do not have capture groups: {columns}");
+        }
     }
 
     public Schema Schema { get; }
