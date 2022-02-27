@@ -17,9 +17,17 @@ public class Parser
 
     public Schema Schema { get; }
 
-    public Dictionary<string, string> Parse(string line)
+    public bool TryParse(string line, out Dictionary<string, string> result)
     {
         var match = _regex.Match(line);
-        return Schema.Columns.ToDictionary(x => x.Name, x => match.Groups[x.Name].Value);
+
+        if (!match.Success)
+        {
+            result = null;
+            return false;
+        }
+
+        result = Schema.Columns.ToDictionary(x => x.Name, x => match.Groups[x.Name].Value);
+        return true;
     }
 }
