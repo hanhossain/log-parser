@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -20,13 +23,27 @@ public class Program
             .Build();
         var schemaDefinition = deserializer.Deserialize<Schema>(schemaRaw);
         var parser = new Parser(schemaDefinition);
+        var parsedLines = new List<Dictionary<string, string>>();
 
-        if (parser.TryParse(lines[0], out var result))
+        foreach (var line in lines)
         {
-            foreach (var (key, value) in result)
+            if (parser.TryParse(line, out var parsedLine))
             {
-                Console.WriteLine($"{key}: {value}");
+                parsedLines.Add(parsedLine);
+            }
+            else
+            {
+                var lastLine = parsedLines.LastOrDefault();
+                if (lastLine != null)
+                {
+                    var lastColumn = schemaDefinition.Columns.Last();
+
+                    // TODO: use a string builder to prevent unnecessary allocations
+                    lastLine[lastColumn.Name] += $"{Environment.NewLine}{line}";
+                }
             }
         }
+
+        Console.WriteLine(JsonSerializer.Serialize(parsedLines));
     }
 }
