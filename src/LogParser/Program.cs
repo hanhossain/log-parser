@@ -8,24 +8,25 @@ namespace LogParser;
 
 public class Program
 {
-    public static async Task Main(string[] args)
+    /// <param name="schema">Path to the schema definition</param>
+    /// <param name="path">Path to the log file</param>
+    public static async Task Main(string schema, string path)
     {
-        var path = "";
-        var schemaPath = "";
-        var schemaRaw = await File.ReadAllTextAsync(schemaPath);
-
+        var schemaRaw = await File.ReadAllTextAsync(schema);
         var lines = await File.ReadAllLinesAsync(path);
-        var line = lines[0];
 
         var deserializer = new DeserializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
             .Build();
-        var schema = deserializer.Deserialize<Schema>(schemaRaw);
-        var parser = new Parser(schema);
+        var schemaDefinition = deserializer.Deserialize<Schema>(schemaRaw);
+        var parser = new Parser(schemaDefinition);
 
-        foreach (var (key, value) in parser.Parse(line))
+        if (parser.TryParse(lines[0], out var result))
         {
-            Console.WriteLine($"{key}: {value}");
+            foreach (var (key, value) in result)
+            {
+                Console.WriteLine($"{key}: {value}");
+            }
         }
     }
 }
